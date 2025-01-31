@@ -5,14 +5,10 @@ type User struct {
 		Username       string `json:"username"`
 		PrivilegeLevel int    `json:"privilegeLevel"`
 	} `json:"currentUser"`
-	CurrentProjectName string           `json:"currentProjectName"`
-	Language           string           `json:"language"`
-	ProjectOverviews   ProjectOverviews `json:"projectOverviews"`
-	Projects           []Project        `json:"projects"`
-}
-
-type ProjectOverviews struct {
-	ProjectOverviews []ProjectOverview
+	CurrentProjectName string            `json:"currentProjectName"`
+	Language           string            `json:"language"`
+	ProjectOverviews   []ProjectOverview `json:"projectOverviews"`
+	Projects           []Project         `json:"projects"`
 }
 
 type ProjectOverview struct {

@@ -12,7 +12,7 @@ import (
 )
 
 type MongoStore struct {
-	client *mongo.Client
+	collection *mongo.Collection
 }
 
 type UserDoc struct {
@@ -20,31 +20,27 @@ type UserDoc struct {
 	User *User
 }
 
-func NewMongoStore(url string) *MongoStore {
+func NewMongoStore(url string, db string, coll string) *MongoStore {
+
 	clientOptions := options.Client().ApplyURI(url)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
-
 	if err != nil {
+		log.Fatalf("mongo error: %s", err)
 		return nil
 	}
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			log.Fatal(err)
-		}
-	}()
 
 	if err = client.Ping(context.TODO(), nil); err != nil {
 		return nil
 	}
 
-	return &MongoStore{client}
+	collection := client.Database(db).Collection(coll)
+
+	return &MongoStore{collection}
 }
 
 func (m MongoStore) Add(name string, user User) error {
-
-	collection := m.client.Database("smartera").Collection("users")
 	userDoc := &UserDoc{ID: name, User: &user}
-	insertResult, err := collection.InsertOne(context.TODO(), userDoc)
+	insertResult, err := m.collection.InsertOne(context.TODO(), userDoc)
 
 	if err != mongo.ErrNilCursor {
 		return err
@@ -60,8 +56,7 @@ func (m MongoStore) Add(name string, user User) error {
 
 func (m MongoStore) Get(name string) (User, error) {
 	userDoc := &UserDoc{}
-	collection := m.client.Database("smartera").Collection("users")
-	err := collection.FindOne(context.TODO(), bson.M{"_id": name}).Decode(&userDoc)
+	err := m.collection.FindOne(context.TODO(), bson.M{"_id": name}).Decode(&userDoc)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -73,9 +68,8 @@ func (m MongoStore) Get(name string) (User, error) {
 }
 
 func (m MongoStore) Update(name string, user User) error {
-	collection := m.client.Database("smartera").Collection("users")
 	userDoc := &UserDoc{ID: name, User: &user}
-	updateResult, err := collection.ReplaceOne(context.TODO(), bson.M{"_id": name}, userDoc)
+	updateResult, err := m.collection.ReplaceOne(context.TODO(), bson.M{"_id": name}, userDoc)
 	if err != nil {
 		panic(err)
 	}

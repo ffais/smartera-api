@@ -1,0 +1,12 @@
+database:
+  url: "mongodb://localhost:27017/"
+  dbname: "smartera"
+  collection: "users"
+
+file:
+  directory: "/storage"
+
+server:
+  port: 8010
+
+  

@@ -3,5 +3,14 @@
   // Al passaggio del mouse vengono visualizzate le descrizioni degli attributi esistenti.
   // Per altre informazioni, visitare: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
-  "configurations": []
+  "configurations": [
+    {
+      "name": "Launch Package",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/api",
+      "env": {"SMARTERA_API_DATABASE_URL": "mongodb://localhost:27017/"},
+    },
+  ]
 }
