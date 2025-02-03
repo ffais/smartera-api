@@ -20,6 +20,10 @@ type UserDoc struct {
 	User *User
 }
 
+type ProjectOverviews struct {
+	ProjectOverviews []ProjectOverview
+}
+
 func NewMongoStore(url string, db string, coll string) *MongoStore {
 
 	clientOptions := options.Client().ApplyURI(url)
@@ -62,7 +66,7 @@ func (m MongoStore) Get(name string) (User, error) {
 		if err == mongo.ErrNoDocuments {
 			return User{}, ErrNotFound
 		}
-		panic(err)
+		return User{}, err
 	}
 	return *userDoc.User, nil
 }
@@ -71,7 +75,7 @@ func (m MongoStore) Update(name string, user User) error {
 	userDoc := &UserDoc{ID: name, User: &user}
 	updateResult, err := m.collection.ReplaceOne(context.TODO(), bson.M{"_id": name}, userDoc)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if updateResult.MatchedCount != 0 {
@@ -79,4 +83,34 @@ func (m MongoStore) Update(name string, user User) error {
 		return nil
 	}
 	return ErrNotFound
+}
+
+func (m MongoStore) FindAll() (projects ProjectOverviews, err error) {
+	type projectOverviewsDoc struct {
+		ID   string `bson:"_id" json:"id,omitempty"`
+		User struct {
+			ProjectOverviews []ProjectOverview `json:"projectoverviews"`
+		} `json:"user"`
+	}
+	filter := bson.D{}
+	opts := options.Find().SetProjection(bson.D{{Key: "_id", Value: 0}, {Key: "user.projectoverviews", Value: 1}})
+	cursor, err := m.collection.Find(context.TODO(), filter, opts)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return ProjectOverviews{}, ErrNotFound
+		}
+		return ProjectOverviews{}, err
+	}
+	for cursor.Next(context.TODO()) {
+		var result projectOverviewsDoc
+		if err := cursor.Decode(&result); err != nil {
+			return ProjectOverviews{}, err
+		}
+		projects.ProjectOverviews = append(projects.ProjectOverviews, result.User.ProjectOverviews...)
+	}
+	if err := cursor.Err(); err != nil {
+		return ProjectOverviews{}, err
+	}
+	defer cursor.Close(context.TODO())
+	return projects, nil
 }

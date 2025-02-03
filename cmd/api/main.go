@@ -13,10 +13,12 @@ import (
 
 func main() {
 	config := config.ReadConfig()
-	store := models.NewFileStore(config.File.Directory)
+	// store := models.NewFileStore(config.File.Directory)
 	log.Printf("url: %s, db: %s, coll: %s", config.Database.Url, config.Database.DbName, config.Database.Collection)
-	// store := models.NewMongoStore(config.Database.Url, config.Database.DbName, config.Database.Collection)
+	store := models.NewMongoStore(config.Database.Url, config.Database.DbName, config.Database.Collection)
 	log.Printf("mongo ready")
+
+	projectHandler := NewProjectHandler(store)
 	userHandler := NewUserHandler(store)
 	home := homeHandler{}
 
@@ -26,6 +28,7 @@ func main() {
 	router.HandleFunc("/user/{id}", userHandler.CreateUser).Methods("POST")
 	router.HandleFunc("/user/{id}", userHandler.GetUser).Methods("GET")
 	router.HandleFunc("/user/{id}", userHandler.UpdateUser).Methods("PUT")
+	router.HandleFunc("/project/", projectHandler.FindAllProjects).Methods("GET")
 
 	http.ListenAndServe(fmt.Sprintf(": %s", config.Server.Port), router)
 	log.Printf("server ready")
@@ -41,6 +44,26 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("404 Not Found"))
 }
 
+type projectStore interface {
+	FindAll() (projects models.ProjectOverviews, err error)
+}
+
+type ProjectHandler struct {
+	store projectStore
+}
+
+func NewProjectHandler(p projectStore) *ProjectHandler {
+	return &ProjectHandler{
+		store: p,
+	}
+}
+
+type userStore interface {
+	Add(name string, user models.User) error
+	Get(name string) (models.User, error)
+	Update(name string, user models.User) error
+}
+
 type UserHandler struct {
 	store userStore
 }
@@ -49,12 +72,6 @@ func NewUserHandler(s userStore) *UserHandler {
 	return &UserHandler{
 		store: s,
 	}
-}
-
-type userStore interface {
-	Add(name string, user models.User) error
-	Get(name string) (models.User, error)
-	Update(name string, user models.User) error
 }
 
 type homeHandler struct{}
@@ -123,4 +140,26 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (p *ProjectHandler) FindAllProjects(w http.ResponseWriter, r *http.Request) {
+	projectoverviews, err := p.store.FindAll()
+	if err != nil {
+		if err == models.ErrNotFound {
+			NotFoundHandler(w, r)
+			return
+		}
+
+		InternalServerErrorHandler(w, r)
+		return
+	}
+
+	jsonBytes, err := json.Marshal(projectoverviews)
+	if err != nil {
+		InternalServerErrorHandler(w, r)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
 }

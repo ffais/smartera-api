@@ -12,18 +12,24 @@ type User struct {
 }
 
 type ProjectOverview struct {
-	Name      string `json:"name"`
-	Instances int    `json:"instances"`
-	Sessions  int    `json:"sessions"`
-	Health    string `json:"health"`
-	Streak    string `json:"streak"`
+	Name         string `json:"name"`
+	Instances    int    `json:"instances"`
+	Sessions     int    `json:"sessions"`
+	Health       string `json:"health"`
+	Streak       string `json:"streak"`
+	Pause        string `json:"pause"`
+	LastActivity string `json:"lastActivity"`
 }
 
 type Project struct {
-	Name        string       `json:"name"`
-	Ingredients []Ingredient `json:"ingredients"`
-	Sessions    []Session    `json:"sessions"`
-	Own         bool         `json:"own"`
+	Name         string       `json:"name"`
+	Health       string       `json:"health"`
+	Streak       string       `json:"streak"`
+	LastActivity string       `json:"lastActivity"`
+	Pause        string       `json:"pause"`
+	Ingredients  []Ingredient `json:"ingredients"`
+	Sessions     []Session    `json:"sessions"`
+	Own          bool         `json:"own"`
 }
 
 type Ingredient struct {
