@@ -58,6 +58,7 @@ type Session struct {
 	CumulativeDuration  string               `json:"cumulativeDuration"`
 	Description         string               `json:"description"`
 	AssociatedInstances []AssociatedInstance `json:"associatedInstances"`
+	RestartDate         string               `json:"restartDate"`
 }
 
 type AssociatedInstance struct {
