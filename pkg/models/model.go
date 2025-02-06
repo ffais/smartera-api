@@ -9,8 +9,8 @@ type User struct {
 	Language           string            `json:"language"`
 	ProjectOverviews   []ProjectOverview `json:"projectOverviews"`
 	Projects           []Project         `json:"projects"`
-	Terms              string            `json:"terms"`
-	TermsAccepted      string            `json:"termsAccepted"`
+	Terms              bool              `json:"terms"`
+	TermsAccepted      bool              `json:"termsAccepted"`
 }
 
 type ProjectOverview struct {
